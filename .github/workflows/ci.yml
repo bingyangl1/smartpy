@@ -29,9 +29,13 @@ jobs:
           cache: pip
 
       - name: 安装依赖
+        # 锁 OpenCV 4.x：5.x 是主版本跃迁，部分 API 返回值形状有变
+        # （如 findNonZero 从 (N,1,2) 变成 (N,2)），不应让上游大版本波动
+        # 干扰本项目的 CI 信号。5.x 兼容性由下方 compat-opencv5 job 单独探测。
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -e ".[dev]"
+          python -m pip install "opencv-python>=4.5,<5" pywin32>=305 wrapt>=1.14 "numpy>=1.24"
+          python -m pip install -e . --no-deps
           python -m pip install pytest
 
       - name: 编译检查（语法层）
@@ -41,8 +45,7 @@ jobs:
         # 关键护栏：改了代码忘更新 docs/API.md 会在这里失败
         run: python scripts/gen_api_docs.py --check
 
-      - name: 接口兼容性检查
-        # 对比旧 Module.py 的公开 API 是否还都在
+      - name: 接口完整性检查
         run: python scripts/api_diff.py
 
       - name: 运行测试
@@ -59,6 +62,30 @@ jobs:
           name: pytest-report-py${{ matrix.python-version }}
           path: .pytest_cache/
           retention-days: 7
+
+  # OpenCV 5.x 兼容性探测：允许失败（continue-on-error），
+  # 出问题会体现在 job 状态但不会挡住主线 CI。
+  compat-opencv5:
+    runs-on: windows-latest
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: 安装 OpenCV 5.x
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "opencv-python>=5" pywin32>=305 wrapt>=1.14 "numpy>=1.24"
+          python -m pip install -e . --no-deps
+          python -m pip install pytest
+      - name: 跑测试（OpenCV 5.x）
+        env:
+          PYTHONIOENCODING: utf-8
+          SMARTPY_CI: "1"
+        run: |
+          python -c "import cv2; print('OpenCV', cv2.__version__)"
+          python -m pytest tests -q --tb=line
 
   lint:
     runs-on: windows-latest

@@ -26,7 +26,10 @@ classifiers = [
 
 dependencies = [
     "numpy>=1.24",
-    "opencv-python>=4.5",
+    # 锁 4.x 主版本：5.x 是主版本跃迁，部分 API 返回值形状有变
+    # （如 findNonZero 从 (N,1,2) 变成 (N,2)）。本项目已适配，但不在
+    # 主依赖里默认拉 5.x，避免用户被动踩坑。
+    "opencv-python>=4.5,<5",
     "pywin32>=305",
     "wrapt>=1.14",
 ]

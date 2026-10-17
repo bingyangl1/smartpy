@@ -275,6 +275,37 @@ def test_clear_snapshot():
     assert v is None or isinstance(v, int)
 
 
+# ---------------------------------------------------------------- 跨版本兼容
+
+
+def test_first_nonzero_coordinate_order():
+    """锁住坐标系顺序：必须返回 (x, y)，不能是 (y, x)。
+
+    背景：cv2.findNonZero 在不同 OpenCV 版本返回形状不同
+    （4.x 是 (N,1,2)，5.x 是 (N,2)），直接索引会 IndexError。
+    底层实现改为 np.where 后，这里确认坐标顺序没搞反。
+    """
+    from smartpy.color import _first_nonzero
+
+    mask = np.zeros((100, 200), np.uint8)   # 高 100 宽 200
+    mask[30, 40] = 255                       # (x=40, y=30)
+    assert _first_nonzero(mask) == (40, 30)
+
+    mask2 = np.zeros((100, 200), np.uint8)
+    mask2[5:8, 150:160] = 255
+    assert _first_nonzero(mask2) == (150, 5)
+
+    assert _first_nonzero(np.zeros((10, 10), np.uint8)) is None
+
+
+def test_findColor_row_major_first_point():
+    """找色首点必须是行优先（先上后下、先左后右）。"""
+    img = np.zeros((100, 200, 3), np.uint8)
+    img[60, 150] = (0, 0, 255)   # 靠下靠右
+    img[20, 10] = (0, 0, 255)    # 靠上靠左（应该优先）
+    assert smartpy.findColor(0xFF0000, img=img) == (10, 20)
+
+
 # ---------------------------------------------------------------- 颜色范围
 
 

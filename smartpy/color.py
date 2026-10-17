@@ -13,7 +13,7 @@
 - 内部按 BGR 处理（OpenCV/截图原生顺序），转换在边界完成
 
 性能（4K 3840x2160 实测）：
-    全屏精确找色（首点）   ~7 ms   （cv2.inRange + findNonZero）
+    全屏精确找色（首点）   ~7 ms   （cv2.inRange + np.where 取首点）
     全屏精确找色（全部）  ~15 ms
     区域找色 700x500       ~1.6 ms
     多点找色 300x200       ~2 ms
@@ -158,6 +158,22 @@ def _to_screen(hwnd, ox, oy):
         left, top, _, _ = win32gui.GetWindowRect(hwnd)
         return left + ox, top + oy
     return ox, oy
+
+
+def _first_nonzero(mask):
+    """取掩码里第一个非零像素坐标 (x, y)，行优先（先上后下、先左后右）。
+
+    不用 cv2.findNonZero 的返回值做索引，因为不同 OpenCV 版本返回的形状
+    不一致（4.x 是 (N,1,2)，5.x 是 (N,2)），直接 pts[0][0][0] 在 5.x 上会
+    IndexError。这里改用 np.where，返回顺序明确为 (row, col) = (y, x)，
+    跨版本行为一致。
+
+    返回 None 表示没有命中。
+    """
+    ys, xs = np.where(mask > 0)
+    if len(xs) == 0:
+        return None
+    return int(xs[0]), int(ys[0])
 
 
 def _color_mask(bgr, color, sim):
@@ -305,12 +321,11 @@ def findColor(color, region=None, sim=0, hwnd=None, img=_UNSET, all_points=False
     mask = _color_mask(bgr, color, sim)
 
     if not all_points:
-        # 快速路径：只要首个点（findNonZero 比 np.where 快约 2 倍）
-        pts = cv2.findNonZero(mask)
-        if pts is None:
+        # 快速路径：只要首个点
+        pt = _first_nonzero(mask)
+        if pt is None:
             return None
-        x, y = int(pts[0][0][0]), int(pts[0][0][1])
-        return (x + sx, y + sy)
+        return (pt[0] + sx, pt[1] + sy)
 
     ys, xs = np.where(mask > 0)
     if len(xs) == 0:
@@ -576,10 +591,10 @@ def findColorRange(low, high, region=None, hwnd=None, img=_UNSET,
     mask = _range_mask(bgr, low, high)
 
     if not all_points:
-        pts = cv2.findNonZero(mask)
-        if pts is None:
+        pt = _first_nonzero(mask)
+        if pt is None:
             return None
-        return (int(pts[0][0][0]) + sx, int(pts[0][0][1]) + sy)
+        return (pt[0] + sx, pt[1] + sy)
 
     ys, xs = np.where(mask > 0)
     if len(xs) == 0:
