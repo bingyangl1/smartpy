@@ -12,6 +12,14 @@ import os
 import re
 import sys
 
+# Windows CI（英文环境）stdout 是 cp1252，直接 print 中文会 UnicodeEncodeError。
+# 统一切到 UTF-8 并对无法编码的字符降级替换，避免脚本因输出编码崩溃。
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 

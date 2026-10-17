@@ -1,7 +1,13 @@
 # -*- coding: utf-8 -*-
 """XFeat 能力边界测定：什么条件下它真的可用。"""
 import sys
-import time
+
+# Windows CI（英文环境）stdout 是 cp1252，print 中文会 UnicodeEncodeError。
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        passimport time
 
 sys.path.insert(0, r"F:\smartpy")
 

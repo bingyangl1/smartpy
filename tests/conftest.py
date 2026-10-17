@@ -14,6 +14,14 @@ import sys
 
 import pytest
 
+# Windows CI（英文环境）stdout 是 cp1252，print 中文会 UnicodeEncodeError。
+# 不处理的话 pytest 会 INTERNALERROR 直接崩，不是用例失败而是框架崩。
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 if ROOT not in sys.path:
     sys.path.insert(0, ROOT)
@@ -57,8 +65,25 @@ requires_desktop = pytest.mark.skipif(
 )
 
 
+def _safe_print(msg):
+    """pytest 会替换 sys.stdout（capture），直接 print 中文在 cp1252 环境会崩。
+
+    这里用 ascii 转义兜底：能编码就正常显示，编码不了就降级为 \\uXXXX。
+    """
+    try:
+        print(msg)
+    except UnicodeEncodeError:
+        print(msg.encode("ascii", "backslashreplace").decode("ascii"))
+
+
 def pytest_configure(config):
-    # 把「无桌面」状态打到测试头，便于排查
+    # pytest 已替换 stdout，这里再切一次编码
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            pass
+
     if not desktop_ok():
         config._smartpy_no_desktop = True
-        print("\n[conftest] 未检测到可交互桌面，截图/窗口相关用例将跳过")
+        _safe_print("[conftest] 未检测到可交互桌面，截图/窗口相关用例将跳过")

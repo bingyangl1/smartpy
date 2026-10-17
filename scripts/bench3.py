@@ -2,7 +2,13 @@
 """优化前后对比基准（调用新版 matchTemplate 的 pyramid 参数）。"""
 import os
 import sys
-import time
+
+# Windows CI（英文环境）stdout 是 cp1252，print 中文会 UnicodeEncodeError。
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        passimport time
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 

@@ -16,6 +16,12 @@ import ast
 import os
 import sys
 
+# Windows CI（英文环境）stdout 是 cp1252，print 中文会 UnicodeEncodeError。
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, HERE)
 
