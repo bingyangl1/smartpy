@@ -13,6 +13,7 @@ import numpy as np
 import pytest
 
 import smartpy
+from conftest import requires_desktop
 
 
 def make_img(w=200, h=100):
@@ -231,6 +232,7 @@ def test_region_semantics():
 # ---------------------------------------------------------------- 快照
 
 
+@requires_desktop
 def test_snapshot_cache_basic():
     """snapshot 后 getPixel / findColor 应复用同一帧。"""
     try:
@@ -247,6 +249,7 @@ def test_snapshot_cache_basic():
         smartpy.clearSnapshot()
 
 
+@requires_desktop
 def test_snapshot_is_fast():
     """快照后取色应远快于每次截图。"""
     import time
@@ -263,6 +266,7 @@ def test_snapshot_is_fast():
         smartpy.clearSnapshot()
 
 
+@requires_desktop
 def test_clear_snapshot():
     smartpy.snapshot()
     smartpy.clearSnapshot()

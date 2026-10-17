@@ -2,7 +2,7 @@
 """代理环境助手回归测试。
 
 这些测试验证「配置逻辑」而非网络可达性（网络会变，不该进 CI 断言）。
-需要真实网络的用例默认跳过，设 AUTOPY_NET_TEST=1 开启。
+需要真实网络的用例默认跳过，设 SMARTPY_NET_TEST=1 开启。
 """
 
 import os
@@ -17,7 +17,7 @@ from smartpy import net
 
 def test_proxy_url_default():
     assert net.PROXY_URL.startswith("http://")
-    # 默认端口可被 AUTOPY_PROXY 覆盖，这里只校验格式
+    # 默认端口可被 SMARTPY_PROXY 覆盖，这里只校验格式
     assert ":" in net.PROXY_URL.split("//")[1]
 
 
@@ -62,8 +62,8 @@ def test_install_hint_keys():
     assert "hf-mirror.com" in hints["hf_mirror"]
 
 
-@pytest.mark.skipif(os.environ.get("AUTOPY_NET_TEST") != "1",
-                    reason="需要真实网络（AUTOPY_NET_TEST=1 开启）")
+@pytest.mark.skipif(os.environ.get("SMARTPY_NET_TEST") != "1",
+                    reason="需要真实网络（SMARTPY_NET_TEST=1 开启）")
 def test_probe_sources_live():
     results = net.probe_sources()
     assert len(results) == len(net.PROBE_TARGETS)
@@ -71,8 +71,8 @@ def test_probe_sources_live():
         assert set(r) >= {"host", "direct_code", "proxy_code", "advice"}
 
 
-@pytest.mark.skipif(os.environ.get("AUTOPY_NET_TEST") != "1",
-                    reason="需要真实网络（AUTOPY_NET_TEST=1 开启）")
+@pytest.mark.skipif(os.environ.get("SMARTPY_NET_TEST") != "1",
+                    reason="需要真实网络（SMARTPY_NET_TEST=1 开启）")
 def test_probe_stability_live():
     st = net.probe_stability(times=3)
     assert st["times"] == 3

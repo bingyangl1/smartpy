@@ -46,9 +46,10 @@ def my_func(a, b=0):
 ## 测试
 
 ```powershell
-cd F:\smartpy
+cd <项目根目录>
 python -m pytest tests -q                                       # 全部（网络用例自动跳过）
-$env:AUTOPY_NET_TEST=1; python -m pytest tests\test_net.py -q   # 含真实网络
+$env:SMARTPY_CI=1; python -m pytest tests -q                    # 模拟 CI（跳过桌面用例）
+$env:SMARTPY_NET_TEST=1; python -m pytest tests\test_net.py -q  # 含真实网络
 ```
 
 测试文件与模块的对应关系：
@@ -59,13 +60,35 @@ $env:AUTOPY_NET_TEST=1; python -m pytest tests\test_net.py -q   # 含真实网�
 | `tests/test_color.py` | 图色识别全部接口 |
 | `tests/test_xfeat.py` | XFeat 能力边界 |
 | `tests/test_net.py` | 代理配置逻辑 |
+| `tests/test_docs.py` | 文档与代码一致性（护栏） |
+| `tests/conftest.py` | 桌面会话探测与跳过规则 |
+
+### 关于桌面依赖
+
+本包强依赖 Windows 图形 API。**CI（GitHub Actions 的 `windows-latest`）是 Session 0
+无桌面会话**，真实截图拿不到画面、窗口样式读不到。`conftest.py` 会探测桌面可用性，
+自动跳过这些用例（结果里显示 `skipped`），不会造成 CI 假失败。
+
+本机开发时有桌面，这些用例会正常执行。
+
+## CI
+
+工作流在 `.github/workflows/ci.yml`，每次 push / PR 跑：
+
+| 步骤 | 作用 |
+|---|---|
+| `compileall` | 语法检查 |
+| `gen_api_docs.py --check` | 接口文档是否过期（改了代码没更新文档会失败） |
+| `api_diff.py` | `__all__` 每个名字是否真实可导入 |
+| `pytest` | 全部测试（Python 3.9 与 3.12 双版本矩阵） |
+| `ruff`（E9/F63/F7/F82） | 只卡语法错误与未定义名，不卡风格 |
 
 ## 脚本
 
 | 脚本 | 用途 |
 |---|---|
 | `scripts/gen_api_docs.py` | 生成/校验接口文档 |
-| `scripts/api_diff.py` | 对比旧 `Module.py`，确认没丢接口 |
+| `scripts/api_diff.py` | API 自检 + 可选对比旧版 `Module.py` |
 | `scripts/smoke.py` | 端到端冒烟（截图→匹配→遮罩窗） |
 | `scripts/bench3.py` | 模板匹配性能基准 |
 | `scripts/xfeat_boundary.py` | XFeat 能力边界复测 |

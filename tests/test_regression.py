@@ -14,6 +14,7 @@ import numpy as np
 import pytest
 
 import smartpy
+from conftest import requires_desktop
 from smartpy.overlay import Window
 from smartpy.mouse import CubicBezier, genLinePointList
 from smartpy.vision import matchTemplate
@@ -71,6 +72,7 @@ def test_genLinePointList_vertical():
 # ---------------------------------------------------------------- 位运算优先级
 
 
+@requires_desktop
 def test_getTopWindowExist_precedence_fix():
     """旧版 `a & b == 8` 恒 False。新实现用 Z 序判断，验证返回 bool。"""
     import win32con
@@ -83,6 +85,7 @@ def test_getTopWindowExist_precedence_fix():
 # ---------------------------------------------------------------- 屏幕
 
 
+@requires_desktop
 def test_screenCapture_full():
     img = smartpy.screenCapture()
     assert img is not None
@@ -91,12 +94,14 @@ def test_screenCapture_full():
     assert img.size > 0
 
 
+@requires_desktop
 def test_screenCapture_region_shape():
     img = smartpy.screenCapture(region=(0, 0, 64, 32))
     assert img.shape[0] == 32
     assert img.shape[1] == 64
 
 
+@requires_desktop
 def test_window_capture_no_unboundlocal():
     """旧版 del retA -> UnboundLocalError，必崩。"""
     img = smartpy.window_capture(None)  # 桌面
@@ -237,18 +242,21 @@ def test_SendMessage_signature():
 # ---------------------------------------------------------------- 窗口（只读操作）
 
 
+@requires_desktop
 def test_findWindow_desktop_default():
     from smartpy._compat import win32gui
     hwnd = smartpy.findWindow()
     assert hwnd == win32gui.GetDesktopWindow()
 
 
+@requires_desktop
 def test_enumWindows_returns_list():
     infos = smartpy.enumWindows()
     assert isinstance(infos, list)
     assert all(set(d) >= {"className", "windowTitle", "hwnd"} for d in infos)
 
 
+@requires_desktop
 def test_getWindowRect_desktop():
     rect = smartpy.getWindowRect(hwnd=smartpy.findWindow())
     assert len(rect) == 4
@@ -291,6 +299,7 @@ def test_matchFile_list():
 # ---------------------------------------------------------------- 遮罩窗（全生命周期）
 
 
+@requires_desktop
 def test_overlay_window_lifecycle():
     import time
     from smartpy._compat import win32con, win32gui

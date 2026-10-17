@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """代理环境助手 —— 检测/启用本地代理，并验证各源可达性。
 
-实测环境：本地 HTTP/SOCKS5 双协议代理（地址由 AUTOPY_PROXY 环境变量指定）：
+实测环境：本地 HTTP/SOCKS5 双协议代理（地址由 SMARTPY_PROXY 环境变量指定）：
 
     域名                        直连    代理    说明
     ----------------------------------------------------------------
@@ -27,7 +27,11 @@ import time
 __all__ = ["PROXY_URL", "enable_proxy", "disable_proxy", "probe_sources",
            "proxy_env", "install_hint", "probe_stability", "download_with_proxy"]
 
-PROXY_URL = os.environ.get("AUTOPY_PROXY", "http://127.0.0.1:7890")
+PROXY_URL = (
+    os.environ.get("SMARTPY_PROXY")
+    or os.environ.get("AUTOPY_PROXY")      # 旧名兼容
+    or "http://127.0.0.1:7890"
+)
 
 # 走代理无益甚至有害的域名（NO_PROXY）
 BYPASS_HOSTS = "arxiv.org,localhost,127.0.0.1,::1,*.cn,pypi.tuna.tsinghua.edu.cn"

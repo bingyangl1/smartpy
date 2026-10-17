@@ -1,13 +1,60 @@
-# smartpy —— Module.py 重构版
+# smartpy
 
-旧版 [D:\smartpy\Module.py](D:\smartpy\Module.py)（4436 行、92 函数 + 3 类，Jupyter 导出体）在
-Python 3.12 + numpy 2.x 环境已经 import 失败，且存在 13 处必崩 Bug。
-本目录是按现环境（Python 3.12.7 / numpy 2.4.4 / OpenCV 4.11 / pywin32 305）重构的包版本。
+[![CI](https://github.com/bingyangl1/smartpy/actions/workflows/ci.yml/badge.svg)](https://github.com/bingyangl1/smartpy/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/downloads/)
+[![Platform: Windows](https://img.shields.io/badge/platform-Windows-lightgrey.svg)](https://www.microsoft.com/windows)
+
+**Windows 自动化工具包**（Python）—— 截图 / 图像识别 / 图色识别 / 键鼠操作 / 窗口控制 / 透明遮罩层。
+
+> Windows automation toolkit for Python: screenshots, template matching, pixel/color detection,
+> mouse & keyboard, window control, transparent overlay. Built on pywin32 + OpenCV.
+
+## 特性
+
+- **图色识别**：找色、比色、多点找色、色块检测、颜色范围、等待原语（24 个接口）
+- **图像识别**：模板匹配（金字塔加速 3.5~8.3×）+ XFeat 特征匹配兜底（抗缩放/旋转）
+- **键鼠操作**：前台/后台点击、拖拽、贝塞尔轨迹、剪贴板
+- **窗口控制**：查找、枚举、置顶、透明、鼠标穿透、标题修改（30 个接口）
+- **遮罩窗口**：置顶 + 透明 + 鼠标穿透的覆盖层
+- **性能**：截图帧缓存使连续取色从 6.1ms 降到 0.9 微秒
+
+## 安装
+
+```powershell
+git clone https://github.com/bingyangl1/smartpy.git
+cd smartpy
+pip install -e .
+
+# 可选：可视化调试 / 特征匹配
+pip install -e ".[display]"
+pip install -e ".[feature]"
+```
+
+## 快速开始
+
+```python
+import smartpy
+
+# 截图
+img = smartpy.screenCapture()
+
+# 找图
+pts = smartpy.findClick("button", r"imgs", isclick=False)
+
+# 找色
+pt = smartpy.findColor(0xFF0000, region=(0, 0, 1920, 1080))
+
+# 取色（先拍快照，连续查询快 7000 倍）
+smartpy.snapshot()
+c = smartpy.getPixel(100, 200)
+smartpy.clearSnapshot()
+```
 
 ## 目录结构
 
 ```
-F:\smartpy
+smartpy/
 ├── smartpy/              包本体
 │   ├── __init__.py      统一导出（旧 API 全兼容）
 │   ├── _compat.py       pywin32 导入 + 一次性 DPI 设置

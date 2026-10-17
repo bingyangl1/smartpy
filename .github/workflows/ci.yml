@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    # 本包强依赖 Windows API（pywin32 / 真实截图 / 窗口操作），
+    # 不能在 ubuntu runner 上跑，必须用 windows-latest
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # 包声明支持 >=3.9，这里覆盖首尾两个版本
+        python-version: [ "3.9", "3.12" ]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: 安装依赖
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[dev]"
+          python -m pip install pytest
+
+      - name: 编译检查（语法层）
+        run: python -m compileall -q smartpy
+
+      - name: 接口文档一致性检查
+        # 关键护栏：改了代码忘更新 docs/API.md 会在这里失败
+        run: python scripts/gen_api_docs.py --check
+
+      - name: 接口兼容性检查
+        # 对比旧 Module.py 的公开 API 是否还都在
+        run: python scripts/api_diff.py
+
+      - name: 运行测试
+        env:
+          PYTHONIOENCODING: utf-8
+          # CI 环境无桌面会话，跳过需要真实截图的用例
+          SMARTPY_CI: "1"
+        run: python -m pytest tests -v --tb=short
+
+      - name: 上传测试报告
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pytest-report-py${{ matrix.python-version }}
+          path: .pytest_cache/
+          retention-days: 7
+
+  lint:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: 安装
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install ruff
+      - name: Ruff 检查（仅严重问题，不卡样式）
+        run: ruff check smartpy --select E9,F63,F7,F82 --output-format=github

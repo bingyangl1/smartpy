@@ -53,7 +53,11 @@ def _get_model():
     # ROCm/GPU 首次初始化可能很慢或不可用，默认优先 CPU，可用环境变量开启 GPU
     import torch
 
-    want_gpu = os.environ.get("AUTOPY_XFEAT_GPU", "0") == "1"
+    want_gpu = (
+        os.environ.get("SMARTPY_XFEAT_GPU")
+        or os.environ.get("AUTOPY_XFEAT_GPU")   # 旧名兼容
+        or "0"
+    ) == "1"
     if want_gpu and torch.cuda.is_available():
         try:
             model = model.to("cuda")
