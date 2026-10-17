@@ -1,0 +1,52 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "smartpy"
+version = "2.1.0"
+description = "Windows 自动化工具包：键鼠 / 截图 / 图像识别 / 图色识别 / 窗口控制 / 遮罩层"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+keywords = ["windows", "automation", "screenshot", "template-matching", "color-detection", "pywin32"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: System :: Monitoring",
+]
+
+dependencies = [
+    "numpy>=1.24",
+    "opencv-python>=4.5",
+    "pywin32>=305",
+    "wrapt>=1.14",
+]
+
+[project.optional-dependencies]
+# 可视化调试（matchTemplate(show=True) 等路径才会用到）
+display = ["matplotlib>=3.6"]
+# XFeat 特征匹配（抗缩放/旋转）
+feature = ["torch>=2.0", "kornia>=0.7"]
+# 开发
+dev = ["pytest>=7"]
+
+[project.urls]
+Homepage = "https://github.com/bingyangl1/smartpy"
+Repository = "https://github.com/bingyangl1/smartpy"
+Issues = "https://github.com/bingyangl1/smartpy/issues"
+
+[tool.setuptools.packages.find]
+include = ["smartpy*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
